@@ -9,6 +9,7 @@ import 'app.dart';
 import 'data/services/supabase_service.dart';
 import 'presentation/providers/theme_provider.dart';
 import 'presentation/providers/auth_provider.dart';
+import 'presentation/providers/pocket_provider.dart';
 
 void main() async {
   // Pastikan Flutter binding sudah siap
@@ -26,6 +27,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => PocketProvider()),
       ],
       child: const FinanceTrackerApp(),
     ),
