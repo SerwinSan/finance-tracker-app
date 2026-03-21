@@ -1,0 +1,50 @@
+name: financetrackerapp
+description: "Personal Finance Tracker with Virtual Pocketing & Smart Ledger"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  provider: any
+
+  # Supabase (Auth + Database + Storage)
+  supabase_flutter: any
+
+  # Database Lokal (Offline Support)
+  sqflite: any
+  path: any
+
+  # Charts / Visualisasi
+  fl_chart: any
+
+  # Export Data
+  csv: any
+  pdf: any
+  printing: any
+
+  # Environment Variables (API Key Security)
+  flutter_dotenv: any
+
+  # Utilities
+  intl: any
+  uuid: any
+  image_picker: any
+  path_provider: any
+  share_plus: any
+  connectivity_plus: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env

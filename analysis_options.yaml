@@ -1,0 +1,8 @@
+include: package:flutter_lints/flutter.yaml
+
+# Menonaktifkan rule naming convention karena project ini
+# menggunakan snake_case sesuai standar tim.
+linter:
+  rules:
+    non_constant_identifier_names: false
+    constant_identifier_names: false
