@@ -24,9 +24,9 @@ dependencies:
   fl_chart: ^1.2.0
 
   # Export Data
-  csv: any
-  pdf: any
-  printing: any
+  csv: ^8.0.0
+  pdf: ^3.12.0
+  printing: ^5.14.3
 
   # Environment Variables (API Key Security)
   flutter_dotenv: any
@@ -35,9 +35,10 @@ dependencies:
   intl: any
   uuid: any
   image_picker: any
-  path_provider: any
-  share_plus: any
+  path_provider: ^2.1.5
+  share_plus: ^12.0.1
   connectivity_plus: any
+  open_filex: ^4.7.0
 
 dev_dependencies:
   flutter_test:

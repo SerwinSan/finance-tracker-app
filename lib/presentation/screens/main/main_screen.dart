@@ -10,6 +10,7 @@ import '../../../config/theme/app_colors.dart';
 import '../home/home_screen.dart';
 import '../transaction/transaction_list_screen.dart';
 import '../analytics/analytics_screen.dart';
+import '../export/export_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -139,6 +140,20 @@ class _ProfileScreen extends StatelessWidget {
                       : 'Nonaktif'),
                   value: theme_provider.is_dark_mode,
                   onChanged: (_) => theme_provider.toggle_theme(),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.file_download_rounded),
+                  title: const Text('Export Data'),
+                  subtitle: const Text('Unduh laporan CSV atau PDF'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ExportScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
