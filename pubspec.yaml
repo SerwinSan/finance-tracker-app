@@ -21,7 +21,7 @@ dependencies:
   path: any
 
   # Charts / Visualisasi
-  fl_chart: any
+  fl_chart: ^1.2.0
 
   # Export Data
   csv: any

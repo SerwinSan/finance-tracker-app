@@ -9,6 +9,7 @@ import '../../providers/theme_provider.dart';
 import '../../../config/theme/app_colors.dart';
 import '../home/home_screen.dart';
 import '../transaction/transaction_list_screen.dart';
+import '../analytics/analytics_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -24,7 +25,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const TransactionListScreen(),
-    const _PlaceholderScreen(title: 'Analytics', icon: Icons.bar_chart_rounded),
+    const AnalyticsScreen(),
     const _ProfileScreen(),
   ];
 
@@ -67,33 +68,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-/// Placeholder screen sementara untuk tab belum diimplementasi.
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  final IconData icon;
-
-  const _PlaceholderScreen({required this.title, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
-            const SizedBox(height: 16),
-            Text('$title akan hadir segera!', style: theme.textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text('Fitur ini sedang dalam pengembangan', style: theme.textTheme.bodyMedium),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 /// Profil Screen — menampilkan info user, toggle tema, dan logout.
 class _ProfileScreen extends StatelessWidget {
