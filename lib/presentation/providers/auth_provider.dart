@@ -63,6 +63,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Register akun baru dengan email, password, dan nama.
+  /// Setelah register, langsung auto-login agar tidak perlu
+  /// konfirmasi email (untuk development/portofolio).
   Future<bool> register({
     required String email,
     required String password,
@@ -72,13 +74,20 @@ class AuthProvider extends ChangeNotifier {
       _set_loading(true);
       _clear_error();
 
-      final response = await SupabaseService.auth.signUp(
+      // Daftarkan akun baru
+      await SupabaseService.auth.signUp(
         email: email.trim(),
         password: password,
         data: {'full_name': full_name.trim()},
       );
 
-      _user = response.user;
+      // Langsung auto-login setelah registrasi
+      final login_response = await SupabaseService.auth.signInWithPassword(
+        email: email.trim(),
+        password: password,
+      );
+
+      _user = login_response.user;
       notifyListeners();
       return true;
     } on AuthException catch (e) {

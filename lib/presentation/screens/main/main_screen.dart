@@ -157,7 +157,7 @@ class _ProfileScreen extends StatelessWidget {
             child: Column(
               children: [
                 SwitchListTile(
-                  leading: const Icon(Icons.dark_mode_rounded),
+                  secondary: const Icon(Icons.dark_mode_rounded),
                   title: const Text('Mode Gelap'),
                   subtitle: Text(theme_provider.is_dark_mode
                       ? 'Aktif'

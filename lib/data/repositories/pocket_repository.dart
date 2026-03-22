@@ -4,6 +4,7 @@
 library;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/pocket_model.dart';
 import '../local/database_helper.dart';
@@ -23,15 +24,14 @@ class PocketRepository {
   /// Offline: ambil dari SQLite.
   Future<List<Pocket>> get_all_pockets() async {
     try {
-      // Cek koneksi internet
-      final connectivity = await Connectivity().checkConnectivity();
-      final is_online = !connectivity.contains(ConnectivityResult.none);
+      final is_online = await _check_connectivity();
 
       if (is_online) {
         return await _fetch_from_remote();
       }
       return await _fetch_from_local();
     } catch (e) {
+      debugPrint('[PocketRepo] get_all_pockets error: $e');
       // Jika gagal ambil dari remote, fallback ke lokal
       return await _fetch_from_local();
     }
@@ -40,8 +40,7 @@ class PocketRepository {
   /// Ambil satu pocket berdasarkan ID.
   Future<Pocket?> get_pocket_by_id(String id) async {
     try {
-      final connectivity = await Connectivity().checkConnectivity();
-      final is_online = !connectivity.contains(ConnectivityResult.none);
+      final is_online = await _check_connectivity();
 
       if (is_online) {
         final response = await SupabaseService.from(AppConstants.tablePockets)
@@ -51,22 +50,10 @@ class PocketRepository {
         return Pocket.from_supabase(response);
       }
 
-      final rows = await _db.query(
-        AppConstants.tablePockets,
-        where: 'id = ?',
-        where_args: [id],
-      );
-      if (rows.isNotEmpty) return Pocket.from_local(rows.first);
-      return null;
+      return await _get_local_pocket(id);
     } catch (e) {
-      // Fallback lokal
-      final rows = await _db.query(
-        AppConstants.tablePockets,
-        where: 'id = ?',
-        where_args: [id],
-      );
-      if (rows.isNotEmpty) return Pocket.from_local(rows.first);
-      return null;
+      debugPrint('[PocketRepo] get_pocket_by_id error: $e');
+      return await _get_local_pocket(id);
     }
   }
 
@@ -101,16 +88,20 @@ class PocketRepository {
     );
 
     try {
-      final connectivity = await Connectivity().checkConnectivity();
-      final is_online = !connectivity.contains(ConnectivityResult.none);
+      final is_online = await _check_connectivity();
 
       if (is_online) {
-        // Simpan ke Supabase
+        // Simpan ke Supabase — tanpa id agar Supabase generate uuid sendiri
+        // Kita kirim dengan id karena kita generate sendiri via uuid
+        final supabase_data = pocket.to_supabase();
+        debugPrint('[PocketRepo] Inserting to Supabase: $supabase_data');
+
         await SupabaseService.from(AppConstants.tablePockets)
-            .insert(pocket.to_supabase());
+            .insert(supabase_data);
 
         // Simpan ke lokal dengan status 'synced'
         await _db.insert(AppConstants.tablePockets, pocket.to_local());
+        debugPrint('[PocketRepo] Pocket created successfully: ${pocket.name}');
         return pocket;
       }
 
@@ -119,10 +110,17 @@ class PocketRepository {
       await _db.insert(AppConstants.tablePockets, pending_pocket.to_local());
       return pending_pocket;
     } catch (e) {
+      debugPrint('[PocketRepo] create_pocket error: $e');
       // Jika gagal sync, simpan sebagai pending
-      final pending_pocket = pocket.copy_with(sync_status: 'pending');
-      await _db.insert(AppConstants.tablePockets, pending_pocket.to_local());
-      return pending_pocket;
+      try {
+        final pending_pocket = pocket.copy_with(sync_status: 'pending');
+        await _db.insert(AppConstants.tablePockets, pending_pocket.to_local());
+        return pending_pocket;
+      } catch (local_error) {
+        debugPrint('[PocketRepo] local insert also failed: $local_error');
+        // Re-throw agar provider bisa menampilkan error
+        rethrow;
+      }
     }
   }
 
@@ -135,8 +133,7 @@ class PocketRepository {
     final updated = pocket.copy_with();
 
     try {
-      final connectivity = await Connectivity().checkConnectivity();
-      final is_online = !connectivity.contains(ConnectivityResult.none);
+      final is_online = await _check_connectivity();
 
       if (is_online) {
         await SupabaseService.from(AppConstants.tablePockets)
@@ -162,6 +159,7 @@ class PocketRepository {
       );
       return pending;
     } catch (e) {
+      debugPrint('[PocketRepo] update_pocket error: $e');
       final pending = updated.copy_with(sync_status: 'pending');
       await _db.update(
         AppConstants.tablePockets,
@@ -180,8 +178,7 @@ class PocketRepository {
   /// Hapus pocket berdasarkan ID.
   Future<void> delete_pocket(String id) async {
     try {
-      final connectivity = await Connectivity().checkConnectivity();
-      final is_online = !connectivity.contains(ConnectivityResult.none);
+      final is_online = await _check_connectivity();
 
       if (is_online) {
         await SupabaseService.from(AppConstants.tablePockets)
@@ -195,6 +192,7 @@ class PocketRepository {
         where_args: [id],
       );
     } catch (e) {
+      debugPrint('[PocketRepo] delete_pocket error: $e');
       // Jika gagal hapus di remote, tetap hapus di lokal
       await _db.delete(
         AppConstants.tablePockets,
@@ -207,6 +205,27 @@ class PocketRepository {
   // =========================================================
   // SYNC HELPERS
   // =========================================================
+
+  /// Cek koneksi internet.
+  Future<bool> _check_connectivity() async {
+    try {
+      final connectivity = await Connectivity().checkConnectivity();
+      return !connectivity.contains(ConnectivityResult.none);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Ambil pocket dari SQLite lokal by ID.
+  Future<Pocket?> _get_local_pocket(String id) async {
+    final rows = await _db.query(
+      AppConstants.tablePockets,
+      where: 'id = ?',
+      where_args: [id],
+    );
+    if (rows.isNotEmpty) return Pocket.from_local(rows.first);
+    return null;
+  }
 
   /// Ambil data dari Supabase dan simpan ke lokal.
   Future<List<Pocket>> _fetch_from_remote() async {
@@ -221,7 +240,7 @@ class PocketRepository {
         .map((json) => Pocket.from_supabase(json as Map<String, dynamic>))
         .toList();
 
-    // Simpan semua ke lokal (replace)
+    // Simpan semua ke lokal (INSERT OR REPLACE karena mungkin data sudah ada)
     for (final pocket in pockets) {
       await _db.insert(AppConstants.tablePockets, {
         ...pocket.to_local(),
@@ -235,14 +254,19 @@ class PocketRepository {
 
   /// Ambil data dari SQLite lokal.
   Future<List<Pocket>> _fetch_from_local() async {
-    final user_id = SupabaseService.current_user_id;
-    final rows = await _db.query(
-      AppConstants.tablePockets,
-      where: 'user_id = ?',
-      where_args: [user_id],
-      order_by: 'created_at ASC',
-    );
-    return rows.map((row) => Pocket.from_local(row)).toList();
+    try {
+      final user_id = SupabaseService.current_user_id;
+      final rows = await _db.query(
+        AppConstants.tablePockets,
+        where: 'user_id = ?',
+        where_args: [user_id],
+        order_by: 'created_at ASC',
+      );
+      return rows.map((row) => Pocket.from_local(row)).toList();
+    } catch (e) {
+      debugPrint('[PocketRepo] _fetch_from_local error: $e');
+      return [];
+    }
   }
 
   /// Sinkronisasi data pending ke Supabase.
