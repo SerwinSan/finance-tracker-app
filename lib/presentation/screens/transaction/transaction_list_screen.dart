@@ -87,6 +87,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                 : _build_transaction_list(tx_provider.transactions, theme),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'transaction_fab',
         onPressed: _go_to_add_transaction,
         icon: const Icon(Icons.add_rounded),
         label: const Text('Catat'),

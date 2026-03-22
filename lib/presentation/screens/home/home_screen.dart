@@ -130,6 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       // FAB untuk tambah pocket cepat
       floatingActionButton: FloatingActionButton(
+        heroTag: 'home_fab',
         onPressed: () => _show_create_pocket_form(context),
         child: const Icon(Icons.add_rounded),
       ),

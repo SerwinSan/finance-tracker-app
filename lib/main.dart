@@ -4,6 +4,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'app.dart';
 import 'data/services/supabase_service.dart';
@@ -21,6 +22,9 @@ void main() async {
 
   // Inisialisasi Supabase
   await SupabaseService.initialize();
+
+  // Inisialisasi locale data untuk format tanggal & angka Indonesia
+  await initializeDateFormatting('id_ID', null);
 
   runApp(
     // MultiProvider untuk menyediakan semua provider ke widget tree
