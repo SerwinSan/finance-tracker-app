@@ -9,8 +9,10 @@ import '../../../config/theme/app_colors.dart';
 import '../../../utils/formatters.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/pocket_provider.dart';
+import '../../providers/saving_goal_provider.dart';
 import '../../widgets/pocket_card.dart';
 import '../pocket/pocket_form_screen.dart';
+import '../saving_goal/saving_goal_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Load pockets saat halaman pertama kali dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<PocketProvider>().load_pockets();
+      context.read<SavingGoalProvider>().load_goals();
     });
   }
 
@@ -121,6 +124,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
+
+              // === Section Target Tabungan ===
+              SliverToBoxAdapter(
+                child: _build_saving_goals_section(context),
+              ),
 
               // Spacer bawah
               const SliverToBoxAdapter(child: SizedBox(height: 80)),
@@ -302,5 +310,121 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  /// Section Target Tabungan di beranda.
+  Widget _build_saving_goals_section(BuildContext context) {
+    final theme = Theme.of(context);
+    final goal_provider = context.watch<SavingGoalProvider>();
+    final active = goal_provider.active_goals;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Target Tabungan 🎯', style: theme.textTheme.titleLarge),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SavingGoalListScreen()),
+                ),
+                child: const Text('Lihat Semua'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          if (active.isEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Icon(Icons.savings_rounded, size: 32,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.5)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text('Belum ada target tabungan.\nYuk buat satu!',
+                          style: theme.textTheme.bodyMedium),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            // Tampilkan max 3 goal aktif
+            ...active.take(3).map((goal) {
+              final color = _parse_goal_color(goal.color);
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const SavingGoalListScreen()),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        // Icon
+                        Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(Icons.savings_rounded, color: color, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        // Info
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(goal.name,
+                                  style: theme.textTheme.titleSmall,
+                                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                              const SizedBox(height: 6),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: goal.progress,
+                                  minHeight: 6,
+                                  backgroundColor: color.withValues(alpha: 0.1),
+                                  valueColor: AlwaysStoppedAnimation(color),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Percentage
+                        Text('${goal.progress_percentage}%',
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            )),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Color _parse_goal_color(String hex) {
+    try {
+      return Color(int.parse(hex.replaceFirst('#', '0xFF')));
+    } catch (_) {
+      return AppColors.primary;
+    }
   }
 }
