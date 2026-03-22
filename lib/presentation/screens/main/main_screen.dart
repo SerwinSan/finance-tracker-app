@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../../config/theme/app_colors.dart';
 import '../home/home_screen.dart';
+import '../transaction/transaction_list_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -22,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
   // Screens untuk setiap tab
   final List<Widget> _screens = [
     const HomeScreen(),
-    const _PlaceholderScreen(title: 'Transaksi', icon: Icons.receipt_long_rounded),
+    const TransactionListScreen(),
     const _PlaceholderScreen(title: 'Analytics', icon: Icons.bar_chart_rounded),
     const _ProfileScreen(),
   ];
