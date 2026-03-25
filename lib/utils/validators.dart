@@ -85,4 +85,41 @@ class Validators {
     }
     return null;
   }
+
+  /// Validasi panjang maksimum teks.
+  static String? validate_max_length(String? value, int max, String field_name) {
+    if (value != null && value.trim().length > max) {
+      return '$field_name maksimal $max karakter';
+    }
+    return null;
+  }
+
+  /// Validasi nama pocket/goal — tidak boleh kosong, max 50 karakter.
+  static String? validate_pocket_name(String? value) {
+    final required_error = validate_required(value, 'Nama');
+    if (required_error != null) return required_error;
+    return validate_max_length(value, 50, 'Nama');
+  }
+
+  // =========================================================
+  // SANITIZATION — mencegah XSS dan input berbahaya
+  // =========================================================
+
+  /// Hapus HTML tags dari input teks.
+  /// Mencegah XSS jika data ditampilkan di web atau laporan.
+  static String sanitize_text(String input) {
+    return input
+        .replaceAll(RegExp(r'<[^>]*>'), '') // Hapus HTML tags
+        .replaceAll(RegExp(r'[<>]'), '')     // Hapus sisa < >
+        .trim();
+  }
+
+  /// Sanitize deskripsi transaksi — strip HTML, limit panjang.
+  static String sanitize_description(String input, {int max_length = 200}) {
+    final cleaned = sanitize_text(input);
+    if (cleaned.length > max_length) {
+      return cleaned.substring(0, max_length);
+    }
+    return cleaned;
+  }
 }
