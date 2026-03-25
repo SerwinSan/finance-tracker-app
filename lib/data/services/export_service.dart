@@ -3,6 +3,7 @@
 /// PDF: laporan bulanan yang rapi dengan summary dan tabel.
 library;
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -21,29 +22,44 @@ class ExportService {
   // CSV EXPORT
   // =========================================================
 
-  /// Export daftar transaksi ke file CSV, lalu share.
+  /// Escape satu cell CSV sesuai standar RFC 4180.
+  /// Selalu wrap dalam kutip ganda untuk menghindari masalah encoding.
+  static String _escape_csv_cell(String value) {
+    // Ganti kutip ganda jadi dua kutip ganda (standar CSV)
+    final escaped = value.replaceAll('"', '""');
+    // Selalu wrap dalam kutip ganda supaya aman
+    return '"$escaped"';
+  }
+
+  /// Export daftar transaksi ke file CSV.
+  /// Menggunakan UTF-8 BOM supaya Excel bisa baca encoding dengan benar.
   static Future<File?> export_csv(List<Transaction> transactions) async {
     try {
       if (transactions.isEmpty) return null;
 
       // Header kolom
-      final rows = <List<String>>[
-        [
-          'Tanggal',
-          'Tipe',
-          'Kategori',
-          'Jumlah',
-          'Mata Uang',
-          'Deskripsi',
-          'Label',
-          'Dompet ID',
-        ],
+      final headers = [
+        'Tanggal',
+        'Tipe',
+        'Kategori',
+        'Jumlah',
+        'Mata Uang',
+        'Deskripsi',
+        'Label',
+        'Dompet ID',
       ];
 
-      // Isi data
+      // Build CSV string dengan CRLF line endings (standar RFC 4180)
+      final buffer = StringBuffer();
+
+      // Tulis header
+      buffer.write(headers.map(_escape_csv_cell).join(','));
+      buffer.write('\r\n');
+
+      // Tulis data
       final date_format = DateFormat('dd/MM/yyyy HH:mm');
       for (final tx in transactions) {
-        rows.add([
+        final row = [
           date_format.format(tx.transaction_date),
           tx.type == 'income' ? 'Pemasukan' : 'Pengeluaran',
           tx.category_name ?? '-',
@@ -52,25 +68,22 @@ class ExportService {
           tx.description ?? '-',
           tx.label ?? '-',
           tx.pocket_id,
-        ]);
+        ];
+        buffer.write(row.map(_escape_csv_cell).join(','));
+        buffer.write('\r\n');
       }
 
-      // Konversi ke CSV string secara manual
-      final buffer = StringBuffer();
-      for (final row in rows) {
-        buffer.writeln(row.map((cell) {
-          // Escape cells yang mengandung koma, kutip, atau newline
-          final escaped = cell.replaceAll('"', '""');
-          return cell.contains(RegExp(r'[,"\n]')) ? '"$escaped"' : cell;
-        }).join(','));
-      }
-      final csv_data = buffer.toString();
-
-      // Simpan ke file
+      // Simpan ke file dengan UTF-8 BOM
+      // BOM (Byte Order Mark) diperlukan supaya Excel Android/Windows
+      // mengenali encoding UTF-8 dan tidak mengacaukan karakter Indonesia.
       final dir = await getApplicationDocumentsDirectory();
       final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
       final file = File('${dir.path}/transaksi_$timestamp.csv');
-      await file.writeAsString(csv_data);
+
+      // UTF-8 BOM = 0xEF, 0xBB, 0xBF
+      final bom = [0xEF, 0xBB, 0xBF];
+      final csv_bytes = utf8.encode(buffer.toString());
+      await file.writeAsBytes([...bom, ...csv_bytes]);
 
       debugPrint('[ExportService] CSV exported: ${file.path}');
       return file;
