@@ -13,7 +13,9 @@ import '../../providers/pocket_provider.dart';
 import '../../providers/transaction_provider.dart';
 
 class TransactionFormScreen extends StatefulWidget {
-  const TransactionFormScreen({super.key});
+  final String? preselected_pocket_id;
+
+  const TransactionFormScreen({super.key, this.preselected_pocket_id});
 
   @override
   State<TransactionFormScreen> createState() => _TransactionFormScreenState();
@@ -46,10 +48,14 @@ class _TransactionFormScreenState extends State<TransactionFormScreen>
     // Load categories
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TransactionProvider>().load_categories();
-      // Auto-select pocket pertama jika ada
-      final pockets = context.read<PocketProvider>().pockets;
-      if (pockets.isNotEmpty && _selected_pocket_id == null) {
-        setState(() => _selected_pocket_id = pockets.first.id);
+      // Gunakan preselected pocket jika ada, atau auto-select pertama
+      if (widget.preselected_pocket_id != null) {
+        setState(() => _selected_pocket_id = widget.preselected_pocket_id);
+      } else {
+        final pockets = context.read<PocketProvider>().pockets;
+        if (pockets.isNotEmpty && _selected_pocket_id == null) {
+          setState(() => _selected_pocket_id = pockets.first.id);
+        }
       }
     });
   }

@@ -9,12 +9,14 @@ import '../../utils/formatters.dart';
 
 class PocketCard extends StatelessWidget {
   final Pocket pocket;
+  final VoidCallback? on_tap;
   final VoidCallback? on_edit;
   final VoidCallback? on_delete;
 
   const PocketCard({
     super.key,
     required this.pocket,
+    this.on_tap,
     this.on_edit,
     this.on_delete,
   });
@@ -27,7 +29,7 @@ class PocketCard extends StatelessWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: on_edit,
+        onTap: on_tap,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(

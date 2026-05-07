@@ -11,6 +11,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/pocket_provider.dart';
 import '../../providers/saving_goal_provider.dart';
 import '../../widgets/pocket_card.dart';
+import '../pocket/pocket_detail_screen.dart';
 import '../pocket/pocket_form_screen.dart';
 import '../saving_goal/saving_goal_list_screen.dart';
 
@@ -114,6 +115,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: const EdgeInsets.only(bottom: 12),
                           child: PocketCard(
                             pocket: pocket,
+                            on_tap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => PocketDetailScreen(pocket: pocket),
+                              ),
+                            ),
                             on_edit: () => _show_edit_pocket_form(context, pocket),
                             on_delete: () =>
                                 _confirm_delete_pocket(context, pocket.id, pocket.name),
