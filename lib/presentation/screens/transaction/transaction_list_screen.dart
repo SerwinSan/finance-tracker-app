@@ -9,6 +9,9 @@ import '../../../data/models/transaction_model.dart';
 import '../../../utils/formatters.dart';
 import '../../providers/pocket_provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../../utils/page_transitions.dart';
+import 'transaction_detail_screen.dart';
 import 'transaction_form_screen.dart';
 
 class TransactionListScreen extends StatefulWidget {
@@ -81,7 +84,11 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
       body: RefreshIndicator(
         onRefresh: () => tx_provider.load_transactions(),
         child: tx_provider.is_loading && tx_provider.transactions.isEmpty
-            ? const Center(child: CircularProgressIndicator())
+            ? ListView.builder(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
+                itemCount: 6,
+                itemBuilder: (_, __) => const TransactionTileSkeleton(),
+              )
             : tx_provider.transactions.isEmpty
                 ? _build_empty_state(theme)
                 : _build_transaction_list(tx_provider.transactions, theme),
@@ -159,8 +166,22 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
       },
       child: Card(
         margin: const EdgeInsets.only(bottom: 8),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () async {
+            final deleted = await Navigator.of(context).push<bool>(
+              SlidePageRoute(
+                page: TransactionDetailScreen(transaction: tx),
+              ),
+            );
+            // Refresh jika transaksi dihapus dari detail
+            if (deleted == true && mounted) {
+              context.read<TransactionProvider>().load_transactions();
+              context.read<PocketProvider>().load_pockets();
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(14),
           child: Row(
             children: [
               // Ikon kategori
@@ -232,6 +253,7 @@ class _TransactionListScreenState extends State<TransactionListScreen> {
                 ),
               ),
             ],
+          ),
           ),
         ),
       ),

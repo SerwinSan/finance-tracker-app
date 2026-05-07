@@ -10,7 +10,10 @@ import '../../../data/models/transaction_model.dart';
 import '../../../data/repositories/transaction_repository.dart';
 import '../../../utils/formatters.dart';
 import '../../providers/pocket_provider.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../../utils/page_transitions.dart';
 import '../pocket/pocket_form_screen.dart';
+import '../transaction/transaction_detail_screen.dart';
 import '../transaction/transaction_form_screen.dart';
 
 class PocketDetailScreen extends StatefulWidget {
@@ -163,8 +166,14 @@ class _PocketDetailScreenState extends State<PocketDetailScreen> {
 
             // === List Transaksi ===
             if (_is_loading)
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, __) => const TransactionTileSkeleton(),
+                    childCount: 5,
+                  ),
+                ),
               )
             else if (_error != null)
               SliverFillRemaining(
@@ -448,44 +457,59 @@ class _PocketDetailScreenState extends State<PocketDetailScreen> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: cat_color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: cat_color, size: 20),
-        ),
-        title: Text(
-          tx.category_name ?? (is_income ? 'Pemasukan' : 'Pengeluaran'),
-          style: theme.textTheme.titleSmall,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (tx.description != null && tx.description!.isNotEmpty)
-              Text(tx.description!,
-                  style: theme.textTheme.bodySmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
-            Text(
-              Formatters.format_date(tx.transaction_date),
-              style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () async {
+          final deleted = await Navigator.of(context).push<bool>(
+            SlidePageRoute(
+              page: TransactionDetailScreen(transaction: tx),
             ),
-          ],
-        ),
-        trailing: Text(
-          '${is_income ? '+' : '-'} ${Formatters.format_currency(tx.amount, tx.currency)}',
-          style: TextStyle(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
+          );
+          // Refresh jika transaksi dihapus dari detail
+          if (deleted == true) {
+            _refresh_pocket();
+            _load_transactions();
+          }
+        },
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          leading: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: cat_color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: cat_color, size: 20),
+          ),
+          title: Text(
+            tx.category_name ?? (is_income ? 'Pemasukan' : 'Pengeluaran'),
+            style: theme.textTheme.titleSmall,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (tx.description != null && tx.description!.isNotEmpty)
+                Text(tx.description!,
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
+              Text(
+                Formatters.format_date(tx.transaction_date),
+                style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),
+              ),
+            ],
+          ),
+          trailing: Text(
+            '${is_income ? '+' : '-'} ${Formatters.format_currency(tx.amount, tx.currency)}',
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
           ),
         ),
       ),

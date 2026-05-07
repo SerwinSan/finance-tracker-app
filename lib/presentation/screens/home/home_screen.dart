@@ -11,6 +11,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/pocket_provider.dart';
 import '../../providers/saving_goal_provider.dart';
 import '../../widgets/pocket_card.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../../utils/page_transitions.dart';
 import '../pocket/pocket_detail_screen.dart';
 import '../pocket/pocket_form_screen.dart';
 import '../saving_goal/saving_goal_list_screen.dart';
@@ -94,11 +96,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // === Daftar Pocket ===
               if (pocket_provider.is_loading && pocket_provider.pockets.isEmpty)
-                const SliverToBoxAdapter(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(40),
-                      child: CircularProgressIndicator(),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => const Padding(
+                        padding: EdgeInsets.only(bottom: 12),
+                        child: PocketCardSkeleton(),
+                      ),
+                      childCount: 3,
                     ),
                   ),
                 )
@@ -116,8 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: PocketCard(
                             pocket: pocket,
                             on_tap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => PocketDetailScreen(pocket: pocket),
+                              SlidePageRoute(
+                                page: PocketDetailScreen(pocket: pocket),
                               ),
                             ),
                             on_edit: () => _show_edit_pocket_form(context, pocket),
