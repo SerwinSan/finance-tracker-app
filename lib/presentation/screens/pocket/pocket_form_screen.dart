@@ -131,12 +131,18 @@ class _PocketFormScreenState extends State<PocketFormScreen> {
       appBar: AppBar(
         title: Text(_is_edit_mode ? 'Edit Dompet' : 'Buat Dompet Baru'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _form_key,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            20 + MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).viewPadding.bottom,
+          ),
+          child: Form(
+            key: _form_key,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // === Nama Pocket ===
               TextFormField(
@@ -335,6 +341,7 @@ class _PocketFormScreenState extends State<PocketFormScreen> {
               ),
             ],
           ),
+        ),
         ),
       ),
     );

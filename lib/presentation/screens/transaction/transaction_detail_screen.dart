@@ -52,10 +52,11 @@ class TransactionDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
             // === Header: Nominal besar ===
             _build_amount_header(theme, tx, is_income, color, cat_color),
 
@@ -225,6 +226,7 @@ class TransactionDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 40),
           ],
+        ),
         ),
       ),
     );

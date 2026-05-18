@@ -190,12 +190,19 @@ class _TransactionFormScreenState extends State<TransactionFormScreen>
               : AppColors.income,
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _form_key,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          // Padding bawah dinamis: kompensasi navbar HP + keyboard
+          padding: EdgeInsets.fromLTRB(
+            20,
+            20,
+            20,
+            20 + MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).viewPadding.bottom,
+          ),
+          child: Form(
+            key: _form_key,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // === Jumlah ===
               Text('Jumlah', style: theme.textTheme.titleLarge),
@@ -334,6 +341,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen>
               ),
             ],
           ),
+        ),
         ),
       ),
     );
